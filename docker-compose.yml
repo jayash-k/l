@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Backend Node.js service
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile  # Specify the Dockerfile if it's not the default
+    ports:
+      - "6005:6005"
+    environment:
+      - PORT=6005
+      - MONGO_URI=mongodb://mongo:27017/milestono
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+  # MongoDB service
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+
+  # Frontend Nginx + React.js service
+  frontend:
+    build:
+      context: /root/milestono/client
+      dockerfile: Dockerfile  # Specify the Dockerfile if it's named differently
+    ports:
+      - "3000:3000"  # Map port 3000 on the host to port  in the container
+    networks:
+      - app-network
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend  # If the frontend depends on the backend being up
+
+volumes:
+  mongo-data:
+
+networks:
+  app-network:
+    driver: bridge
